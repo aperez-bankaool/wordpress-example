@@ -1,0 +1,48 @@
+services:
+- type: web
+  name: wordpress
+  runtime: docker      # ← reemplaza env
+  plan: standard
+  autoDeployTrigger: off
+  disk:
+    name: wordpress
+    mountPath: /var/www/html
+    sizeGB: 20
+  healthCheckPath: /
+  envVars:
+    - key: WORDPRESS_DB_HOST
+      fromService:
+        name: mysql-wordpress
+        type: pserv
+        property: hostport      # más robusto
+    - key: WORDPRESS_DB_NAME
+      value: wordpress
+    - key: WORDPRESS_DB_USER
+      fromService:
+        name: mysql-wordpress
+        type: pserv
+        envVarKey: MYSQL_USER
+    - key: WORDPRESS_DB_PASSWORD
+      fromService:
+        name: mysql-wordpress
+        type: pserv
+        envVarKey: MYSQL_PASSWORD
+
+- type: pserv
+  name: mysql-wordpress
+  runtime: docker
+  repo: https://github.com/render-examples/mysql.git
+  plan: standard
+  disk:
+    name: mysql-wordpress
+    mountPath: /var/lib/mysql
+    sizeGB: 20
+  envVars:
+    - key: MYSQL_DATABASE
+      value: wordpress
+    - key: MYSQL_USER
+      value: wp_user
+    - key: MYSQL_PASSWORD
+      generateValue: true
+    - key: MYSQL_ROOT_PASSWORD
+      generateValue: true
